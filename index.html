@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioKardex - Control de Reactivos e Insumos</title>
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Screen Gate -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card" id="login-card">
+            <div class="login-brand">
+                <div class="brand-icon">
+                    <i data-lucide="beaker" class="icon-brand" style="color: #0f172a;"></i>
+                </div>
+                <h2>BioKardex</h2>
+                <span>Control de Reactivos e Insumos</span>
+            </div>
+            <form id="form-login" class="login-form">
+                <div class="form-group">
+                    <label for="login-password">Clave de Acceso</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="login-password" class="form-control" placeholder="Escribe la clave..." required autofocus>
+                        <button type="button" id="btn-toggle-password" class="btn-toggle-password" title="Mostrar clave">
+                            <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 16px; height: 42px;">
+                    <span>Iniciar Sesión</span>
+                    <i data-lucide="log-in" style="width: 16px; height: 16px;"></i>
+                </button>
+            </form>
+            <div class="login-footer">
+                <span>Acceso restringido para personal autorizado</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="app-container" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i data-lucide="beaker" class="icon-brand"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>BioKardex</h1>
+                    <span>Reactivos e Insumos</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="menu-category">Reactivos Controlados</div>
+                <a href="#dashboard" class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#kardex" class="nav-item" id="nav-kardex" onclick="switchView('kardex')">
+                    <i data-lucide="table-properties"></i>
+                    <span>Kardex (Historial)</span>
+                </a>
+                <a href="#transaction" class="nav-item" id="nav-transaction" onclick="switchView('transaction')">
+                    <i data-lucide="arrow-left-right"></i>
+                    <span>Nueva Transacción</span>
+                </a>
+                <a href="#inventory" class="nav-item" id="nav-inventory" onclick="switchView('inventory')">
+                    <i data-lucide="layers"></i>
+                    <span>Stock por Lotes</span>
+                </a>
+
+                <div class="menu-category">Materiales e Insumos</div>
+                <a href="#mat-kardex" class="nav-item" id="nav-mat-kardex" onclick="switchView('mat-kardex')">
+                    <i data-lucide="clipboard-list"></i>
+                    <span>Kardex Materiales</span>
+                </a>
+                <a href="#mat-transaction" class="nav-item" id="nav-mat-transaction" onclick="switchView('mat-transaction')">
+                    <i data-lucide="package-plus"></i>
+                    <span>Registrar Movimiento</span>
+                </a>
+                <a href="#mat-inventory" class="nav-item" id="nav-mat-inventory" onclick="switchView('mat-inventory')">
+                    <i data-lucide="package"></i>
+                    <span>Control de Insumos</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="theme-toggle" class="btn-theme-toggle" title="Cambiar tema">
+                    <i data-lucide="sun" class="sun-icon"></i>
+                    <i data-lucide="moon" class="moon-icon"></i>
+                    <span class="theme-text">Modo Claro</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header flex-row justify-between align-center">
+                <div class="header-left">
+                    <h2 id="view-title">Dashboard</h2>
+                    <p id="view-subtitle" class="text-muted">Resumen general del inventario de reactivos</p>
+                </div>
+                <div class="header-right flex-row align-center gap-sm">
+                    <button id="btn-sync-status" class="btn btn-secondary btn-sm" onclick="openSyncModal()" title="Configurar conexión Google Sheets" style="display: inline-flex; align-items: center; gap: 8px;">
+                        <span class="sync-dot bg-warning" id="sync-status-dot"></span>
+                        <span id="sync-status-text">Modo Local</span>
+                        <i data-lucide="cloud-off" id="sync-status-icon" style="width: 14px; height: 14px;"></i>
+                    </button>
+                    <div class="current-date">
+                        <i data-lucide="calendar"></i>
+                        <span id="live-date">--/--/----</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard-view" class="view-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary-soft text-primary">
+                            <i data-lucide="flask-conical"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Reactivos</span>
+                            <span id="stat-total-reagents" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success-soft text-success">
+                            <i data-lucide="package-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Lotes Activos</span>
+                            <span id="stat-active-batches" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning-soft text-warning">
+                            <i data-lucide="alert-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Stock Crítico / Bajo</span>
+                            <span id="stat-low-stock" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-danger-soft text-danger">
+                            <i data-lucide="hourglass"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Vence &lt; 6 meses</span>
+                            <span id="stat-expiring-soon" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Chart Card -->
+                    <div class="card chart-card col-span-2">
+                        <div class="card-header">
+                            <h3>Consumo de Reactivos (Neto vs Bruto)</h3>
+                            <span class="text-muted">Últimos meses</span>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="consumptionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Alert Cards -->
+                    <div class="card alert-card">
+                        <div class="card-header">
+                            <h3>Alertas de Inventario</h3>
+                            <i data-lucide="bell" class="icon-pulse text-warning"></i>
+                        </div>
+                        <div class="card-body notifications-list" id="alerts-list">
+                            <!-- Dynamically populated alerts -->
+                            <div class="empty-alerts">
+                                <i data-lucide="check-circle-2" class="text-success"></i>
+                                <p>No hay alertas activas en este momento.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="card table-card margin-top-lg">
+                    <div class="card-header flex-row justify-between">
+                        <div>
+                            <h3>Transacciones Recientes (Reactivos)</h3>
+                            <p class="text-muted">Últimos movimientos registrados en el Kardex</p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="switchView('kardex')">
+                            <span>Ver todo</span>
+                            <i data-lucide="chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="card-body overflow-x">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Reactivo</th>
+                                    <th>Lote</th>
+                                    <th>Tipo</th>
+                                    <th>Cantidad</th>
+                                    <th>Stock Resultante</th>
+                                    <th>Neto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-transactions-tbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Kardex View (Reactivos) -->
+            <section id="kardex-view" class="view-section">
+                <div class="card filter-card">
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label for="filter-reagent">Filtrar por Reactivo</label>
+                            <select id="filter-reagent" class="form-control">
+                                <option value="">Todos los reactivos</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-type">Tipo de Movimiento</label>
+                            <select id="filter-type" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="ingreso">Ingreso (Inventario)</option>
+                                <option value="consumo">Consumo (Análisis)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-lote">Filtrar por Lote</label>
+                            <input type="text" id="filter-lote" class="form-control" placeholder="Buscar lote...">
+                        </div>
+                        <div class="form-group flex-end">
+                            <button id="btn-clear-filters" class="btn btn-secondary flex-1">
+                                <i data-lucide="filter-x"></i>
+                                <span>Limpiar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="card-header flex-row justify-between align-center">
+                        <div>
+                            <h3>Libro de Kardex de Reactivos</h3>
+                            <p class="text-muted">Registro oficial de movimientos y consumo neto de sustancias controladas</p>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="window.print()">
+                                <i data-lucide="printer"></i>
+                                <span>Imprimir Kardex</span>
+                            </button>
+                            <button id="btn-export-csv" class="btn btn-primary">
+                                <i data-lucide="file-spreadsheet"></i>
+                                <span>Exportar a Excel (CSV)</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body overflow-x">
+                        <table class="data-table card-table-data">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Vence</th>
+                                    <th>Reactivo</th>
+                                    <th>Lote</th>
+                                    <th>Ingreso</th>
+                                    <th>N Analis</th>
+                                    <th>Cons X Analis</th>
+                                    <th>Egreso (ml)</th>
+                                    <th>Stock (ml)</th>
+                                    <th>Recuperado</th>
+                                    <th>Cons Neto</th>
+                                    <th>Observaciones</th>
+                                    <th class="no-print">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kardex-tbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Backup & Restore -->
+                <div class="card margin-top-lg border-dashed">
+                    <div class="card-body flex-row justify-between align-center flex-wrap gap-md">
+                        <div>
+                            <h4>Respaldo de Seguridad General</h4>
+                            <p class="text-muted">Exporta o importa la base de datos completa (Reactivos + Insumos) en formato JSON</p>
+                        </div>
+                        <div class="flex-row gap-sm">
+                            <button id="btn-backup-json" class="btn btn-secondary">
+                                <i data-lucide="download"></i>
+                                <span>Exportar Respaldo</span>
+                            </button>
+                            <label for="import-file" class="btn btn-secondary cursor-pointer">
+                                <i data-lucide="upload"></i>
+                                <span>Importar Respaldo</span>
+                                <input type="file" id="import-file" accept=".json" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transaction View (Ingreso/Consumo Reactivos Form) -->
+            <section id="transaction-view" class="view-section">
+                <div class="transaction-container">
+                    <!-- Switch Tabs -->
+                    <div class="tabs-control">
+                        <button class="tab-btn active" onclick="switchTab('tab-ingreso')">
+                            <i data-lucide="plus-circle"></i>
+                            <span>Ingreso de Inventario</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('tab-consumo')">
+                            <i data-lucide="minus-circle"></i>
+                            <span>Consumo de Análisis</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab Ingreso -->
+                    <div id="tab-ingreso" class="tab-content active">
+                        <div class="card form-card">
+                            <div class="card-header border-none">
+                                <h3>Registrar Entrada de Reactivo</h3>
+                                <p class="text-muted">Añadir nuevo lote o reabastecer stock</p>
+                            </div>
+                            <form id="form-ingreso" class="card-body grid-form">
+                                <div class="form-group col-span-2">
+                                    <label for="ingreso-reactivo">Reactivo *</label>
+                                    <div class="flex-row gap-sm">
+                                        <select id="ingreso-reactivo" class="form-control" required>
+                                            <option value="">Seleccione un reactivo...</option>
+                                        </select>
+                                        <button type="button" class="btn btn-secondary icon-btn" onclick="openNewReagentModal()" title="Crear Reactivo Nuevo">
+                                            <i data-lucide="plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ingreso-lote">Número de Lote *</label>
+                                    <input type="text" id="ingreso-lote" class="form-control" placeholder="Ej. K57210575" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ingreso-cantidad">Cantidad Ingresada (ml / g) *</label>
+                                    <input type="number" id="ingreso-cantidad" class="form-control" min="1" step="any" placeholder="Ej. 4000" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ingreso-fecha">Fecha de Ingreso *</label>
+                                    <input type="date" id="ingreso-fecha" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ingreso-caducidad">Fecha de Vencimiento *</label>
+                                    <input type="date" id="ingreso-caducidad" class="form-control" required>
+                                </div>
+                                <div class="form-group col-span-2">
+                                    <label for="ingreso-obs">Observaciones</label>
+                                    <textarea id="ingreso-obs" class="form-control" rows="3" placeholder="Proveedor, estado físico del envase, etc..."></textarea>
+                                </div>
+                                <div class="form-actions col-span-2">
+                                    <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-lucide="save"></i>
+                                        <span>Guardar Ingreso</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tab Consumo -->
+                    <div id="tab-consumo" class="tab-content">
+                        <div class="card form-card">
+                            <div class="card-header border-none">
+                                <h3>Registrar Consumo por Análisis</h3>
+                                <p class="text-muted">Descontar del inventario y detallar el consumo neto</p>
+                            </div>
+                            <form id="form-consumo" class="card-body grid-form">
+                                <div class="form-group">
+                                    <label for="consumo-reactivo">Reactivo *</label>
+                                    <select id="consumo-reactivo" class="form-control" required>
+                                        <option value="">Seleccione un reactivo...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="consumo-lote">Lote Disponible *</label>
+                                    <select id="consumo-lote" class="form-control" required disabled>
+                                        <option value="">Seleccione primero un reactivo...</option>
+                                    </select>
+                                    <span id="lote-stock-indicator" class="form-info-text"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="consumo-fecha">Fecha de Análisis *</label>
+                                    <input type="date" id="consumo-fecha" class="form-control" required>
+                                </div>
+                                <div class="form-group-divider col-span-2">Cálculos de Consumo</div>
+                                <div class="form-group">
+                                    <label for="consumo-n-analis">Número de Análisis (N Analis) *</label>
+                                    <input type="number" id="consumo-n-analis" class="form-control" min="1" placeholder="Ej. 6" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="consumo-x-analis">Consumo por Análisis (ml/g) *</label>
+                                    <input type="number" id="consumo-x-analis" class="form-control" min="0" step="any" placeholder="Ej. 100" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="consumo-egreso">Egreso Bruto Total (ml/g)</label>
+                                    <div class="disabled-input-wrapper">
+                                        <input type="number" id="consumo-egreso" class="form-control bg-disabled" placeholder="Auto-calculado" readonly>
+                                        <span class="input-badge">Auto</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="consumo-recuperado">Cantidad Recuperada (ml/g)</label>
+                                    <input type="number" id="consumo-recuperado" class="form-control" min="0" step="any" placeholder="Ej. 300 (opcional)">
+                                </div>
+                                <div class="form-group">
+                                    <label for="consumo-neto">Consumo Neto Real (ml/g)</label>
+                                    <div class="disabled-input-wrapper">
+                                        <input type="number" id="consumo-neto" class="form-control bg-disabled font-semibold" placeholder="Auto-calculado" readonly>
+                                        <span class="input-badge">Auto</span>
+                                    </div>
+                                </div>
+                                <div class="form-group col-span-2">
+                                    <label for="consumo-obs">Observaciones / Tipo de Análisis</label>
+                                    <textarea id="consumo-obs" class="form-control" rows="2" placeholder="Ej. Análisis de crudo - Norma ASTM, analista a cargo..."></textarea>
+                                </div>
+                                <div class="form-actions col-span-2">
+                                    <button type="reset" class="btn btn-secondary" onclick="resetConsumoForm()">Limpiar Formulario</button>
+                                    <button type="submit" class="btn btn-primary" id="btn-save-consumo">
+                                        <i data-lucide="save"></i>
+                                        <span>Registrar Consumo</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory / Batches View (Reactivos) -->
+            <section id="inventory-view" class="view-section">
+                <div class="flex-row justify-between align-center margin-bottom-md flex-wrap gap-sm">
+                    <div>
+                        <h3>Inventario Físico Detallado (Reactivos)</h3>
+                        <p class="text-muted">Vista agrupada por reactivos y sus lotes vigentes de forma individual</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openNewReagentModal()">
+                        <i data-lucide="plus"></i>
+                        <span>Añadir Reactivo</span>
+                    </button>
+                </div>
+
+                <div class="inventory-grid" id="inventory-grid-cards">
+                    <!-- Dinámicamente poblado con tarjetas de reactivos -->
+                </div>
+            </section>
+
+            <!-- ================= MATERIALES E INSUMOS SECTION ================= -->
+            <!-- Kardex View (Materiales) -->
+            <section id="mat-kardex-view" class="view-section">
+                <div class="card filter-card">
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label for="filter-mat">Filtrar por Material/Insumo</label>
+                            <select id="filter-mat" class="form-control">
+                                <option value="">Todos los materiales</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-mat-type">Tipo de Movimiento</label>
+                            <select id="filter-mat-type" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="ingreso">Ingreso</option>
+                                <option value="consumo">Consumo</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-end">
+                            <button id="btn-clear-mat-filters" class="btn btn-secondary flex-1">
+                                <i data-lucide="filter-x"></i>
+                                <span>Limpiar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="card-header flex-row justify-between align-center">
+                        <div>
+                            <h3>Libro de Kardex de Materiales e Insumos</h3>
+                            <p class="text-muted">Registro diario de movimientos para insumos generales de laboratorio</p>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="window.print()">
+                                <i data-lucide="printer"></i>
+                                <span>Imprimir Kardex</span>
+                            </button>
+                            <button id="btn-export-mat-csv" class="btn btn-primary">
+                                <i data-lucide="file-spreadsheet"></i>
+                                <span>Exportar a Excel (CSV)</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body overflow-x">
+                        <table class="data-table card-table-data">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Material / Insumo</th>
+                                    <th>Ingreso</th>
+                                    <th>Unid. Ingreso</th>
+                                    <th>Consumo</th>
+                                    <th>Unid. Consumo</th>
+                                    <th>Stock Resultante</th>
+                                    <th>Observaciones</th>
+                                    <th class="no-print">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mat-kardex-tbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transaction View (Ingreso/Consumo Materiales Form) -->
+            <section id="mat-transaction-view" class="view-section">
+                <div class="transaction-container">
+                    <!-- Switch Tabs -->
+                    <div class="tabs-control">
+                        <button class="tab-btn active" id="tab-btn-mat-ingreso" onclick="switchMatTab('tab-mat-ingreso')">
+                            <i data-lucide="plus-circle"></i>
+                            <span>Ingresar Insumo</span>
+                        </button>
+                        <button class="tab-btn" id="tab-btn-mat-consumo" onclick="switchMatTab('tab-mat-consumo')">
+                            <i data-lucide="minus-circle"></i>
+                            <span>Consumir Insumo</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab Ingreso Material -->
+                    <div id="tab-mat-ingreso" class="tab-content active">
+                        <div class="card form-card">
+                            <div class="card-header border-none">
+                                <h3>Registrar Entrada de Material</h3>
+                                <p class="text-muted">Aumentar stock disponible de insumos generales</p>
+                            </div>
+                            <form id="form-mat-ingreso" class="card-body grid-form">
+                                <div class="form-group col-span-2">
+                                    <label for="mat-ingreso-id">Material / Insumo *</label>
+                                    <div class="flex-row gap-sm">
+                                        <select id="mat-ingreso-id" class="form-control" required>
+                                            <option value="">Seleccione un material...</option>
+                                        </select>
+                                        <button type="button" class="btn btn-secondary icon-btn" onclick="openNewMaterialModal()" title="Crear Nuevo Material">
+                                            <i data-lucide="plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mat-ingreso-cantidad">Cantidad Ingresada *</label>
+                                    <input type="number" id="mat-ingreso-cantidad" class="form-control" min="1" step="any" placeholder="Ej. 3" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mat-ingreso-unidad">Unidad de Ingreso *</label>
+                                    <input type="text" id="mat-ingreso-unidad" class="form-control bg-disabled" readonly required>
+                                    <span class="form-info-text">Unidad registrada por defecto</span>
+                                </div>
+                                <div class="form-group col-span-2">
+                                    <label for="mat-ingreso-fecha">Fecha de Ingreso *</label>
+                                    <input type="date" id="mat-ingreso-fecha" class="form-control" required>
+                                </div>
+                                <div class="form-group col-span-2">
+                                    <label for="mat-ingreso-obs">Observaciones</label>
+                                    <textarea id="mat-ingreso-obs" class="form-control" rows="2" placeholder="Proveedor, marca, ubicación, etc..."></textarea>
+                                </div>
+                                <div class="form-actions col-span-2">
+                                    <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-lucide="save"></i>
+                                        <span>Guardar Ingreso</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tab Consumo Material -->
+                    <div id="tab-mat-consumo" class="tab-content">
+                        <div class="card form-card">
+                            <div class="card-header border-none">
+                                <h3>Registrar Salida de Material</h3>
+                                <p class="text-muted">Descontar insumo por uso en laboratorio</p>
+                            </div>
+                            <form id="form-mat-consumo" class="card-body grid-form">
+                                <div class="form-group col-span-2">
+                                    <label for="mat-consumo-id">Material / Insumo *</label>
+                                    <select id="mat-consumo-id" class="form-control" required>
+                                        <option value="">Seleccione un material...</option>
+                                    </select>
+                                    <span id="mat-stock-indicator" class="form-info-text"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mat-consumo-cantidad">Cantidad Consumida *</label>
+                                    <input type="number" id="mat-consumo-cantidad" class="form-control" min="1" step="any" placeholder="Ej. 1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mat-consumo-unidad">Unidad de Consumo *</label>
+                                    <input type="text" id="mat-consumo-unidad" class="form-control bg-disabled" readonly required>
+                                    <span class="form-info-text">Unidad registrada por defecto</span>
+                                </div>
+                                <div class="form-group col-span-2">
+                                    <label for="mat-consumo-fecha">Fecha de Consumo *</label>
+                                    <input type="date" id="mat-consumo-fecha" class="form-control" required>
+                                </div>
+                                <div class="form-group col-span-2">
+                                    <label for="mat-consumo-obs">Observaciones</label>
+                                    <textarea id="mat-consumo-obs" class="form-control" rows="2" placeholder="Área destino, analista, etc..."></textarea>
+                                </div>
+                                <div class="form-actions col-span-2">
+                                    <button type="reset" class="btn btn-secondary" onclick="resetMatConsumoForm()">Limpiar Formulario</button>
+                                    <button type="submit" class="btn btn-primary" id="btn-save-mat-consumo">
+                                        <i data-lucide="save"></i>
+                                        <span>Registrar Consumo</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory View (Materiales) -->
+            <section id="mat-inventory-view" class="view-section">
+                <div class="flex-row justify-between align-center margin-bottom-md flex-wrap gap-sm">
+                    <div>
+                        <h3>Inventario Consolidado de Materiales e Insumos</h3>
+                        <p class="text-muted">Stock disponible y alertas de reabastecimiento para insumos generales</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openNewMaterialModal()">
+                        <i data-lucide="plus"></i>
+                        <span>Añadir Material</span>
+                    </button>
+                </div>
+
+                <div class="inventory-grid" id="mat-inventory-grid-cards">
+                    <!-- Dinámicamente poblado -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- New Reagent Modal -->
+    <div id="reagent-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Crear Nuevo Reactivo</h3>
+                <button class="close-btn" onclick="closeNewReagentModal()">&times;</button>
+            </div>
+            <form id="form-new-reagent" class="modal-body">
+                <div class="form-group">
+                    <label for="new-reagent-name">Nombre del Reactivo *</label>
+                    <input type="text" id="new-reagent-name" class="form-control" placeholder="Ej. ETER PETROLEO" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-reagent-cas">Número CAS (Opcional)</label>
+                    <input type="text" id="new-reagent-cas" class="form-control" placeholder="Ej. 8032-32-4">
+                </div>
+                <div class="form-group">
+                    <label for="new-reagent-unit">Unidad de Medida *</label>
+                    <select id="new-reagent-unit" class="form-control" required>
+                        <option value="ml">Mililitros (ml)</option>
+                        <option value="g">Gramos (g)</option>
+                        <option value="L">Litros (L)</option>
+                        <option value="Kg">Kilogramos (Kg)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-reagent-min-stock">Stock Crítico de Alerta *</label>
+                    <input type="number" id="new-reagent-min-stock" class="form-control" min="0" placeholder="Ej. 1000" required>
+                    <span class="form-info-text">Se generará una alerta cuando el stock total del reactivo caiga por debajo de esta cantidad.</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNewReagentModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Reactivo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- New Material Modal -->
+    <div id="material-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Crear Nuevo Material / Insumo</h3>
+                <button class="close-btn" onclick="closeNewMaterialModal()">&times;</button>
+            </div>
+            <form id="form-new-material" class="modal-body">
+                <div class="form-group">
+                    <label for="new-mat-name">Nombre del Material/Insumo *</label>
+                    <input type="text" id="new-mat-name" class="form-control" placeholder="Ej. GUANTES DE NITRILO" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-mat-unit">Unidad de Medida por Defecto *</label>
+                    <select id="new-mat-unit" class="form-control" required>
+                        <option value="CAJAS">Cajas</option>
+                        <option value="UNIDS">Unidades</option>
+                        <option value="PAQUETES">Paquetes</option>
+                        <option value="ROLLOS">Rollos</option>
+                        <option value="ml">Mililitros (ml)</option>
+                        <option value="g">Gramos (g)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-mat-min-stock">Stock de Alerta Mínimo *</label>
+                    <input type="number" id="new-mat-min-stock" class="form-control" min="0" placeholder="Ej. 1" required>
+                    <span class="form-info-text">Se generará una alerta cuando el stock caiga por debajo de esta cantidad.</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNewMaterialModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Material</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Google Sheets Sync Modal -->
+    <div id="sync-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Conexión con Google Sheets</h3>
+                <button class="close-btn" onclick="closeSyncModal()">&times;</button>
+            </div>
+            <form id="form-sync-settings" class="modal-body">
+                <div class="form-group">
+                    <label for="sync-url">URL de Google Apps Script Web App</label>
+                    <input type="url" id="sync-url" class="form-control" placeholder="https://script.google.com/macros/s/.../exec" required>
+                    <span class="form-info-text">Pega la URL de tu Apps Script publicada como Aplicación Web para sincronizar datos en la nube.</span>
+                </div>
+                <div class="sync-info-box card border-dashed" style="padding: 12px; font-size: 12px; background-color: rgba(255,255,255,0.02);">
+                    <p><strong>¿Cómo funciona?</strong></p>
+                    <p class="text-muted" style="margin-top: 4px;">Al conectar, el sistema cargará los datos existentes en Google Sheets. A partir de entonces, el Kardex se sincronizará en tiempo real en la nube.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeSyncModal()">Cerrar</button>
+                    <button type="button" id="btn-disconnect-sync" class="btn btn-secondary text-danger hidden" onclick="disconnectSync()">Desconectar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-sync">Conectar y Sincronizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
