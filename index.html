@@ -66,18 +66,6 @@
                     <i data-lucide="layout-dashboard"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#kardex" class="nav-item" id="nav-kardex" onclick="switchView('kardex')">
-                    <i data-lucide="table-properties"></i>
-                    <span>Kardex (Historial)</span>
-                </a>
-                <a href="#transaction" class="nav-item" id="nav-transaction" onclick="switchView('transaction')">
-                    <i data-lucide="arrow-left-right"></i>
-                    <span>Nueva Transacción</span>
-                </a>
-                <a href="#inventory" class="nav-item" id="nav-inventory" onclick="switchView('inventory')">
-                    <i data-lucide="layers"></i>
-                    <span>Stock por Lotes</span>
-                </a>
 
                 <div class="menu-category">Materiales e Insumos</div>
                 <a href="#mat-kardex" class="nav-item" id="nav-mat-kardex" onclick="switchView('mat-kardex')">
@@ -200,10 +188,6 @@
                             <h3>Transacciones Recientes (Reactivos)</h3>
                             <p class="text-muted">Últimos movimientos registrados en el Kardex</p>
                         </div>
-                        <button class="btn btn-secondary btn-sm" onclick="switchView('kardex')">
-                            <span>Ver todo</span>
-                            <i data-lucide="chevron-right"></i>
-                        </button>
                     </div>
                     <div class="card-body overflow-x">
                         <table class="data-table">
@@ -223,254 +207,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </section>
-
-            <!-- Kardex View (Reactivos) -->
-            <section id="kardex-view" class="view-section">
-                <div class="card filter-card">
-                    <div class="filter-grid">
-                        <div class="form-group">
-                            <label for="filter-reagent">Filtrar por Reactivo</label>
-                            <select id="filter-reagent" class="form-control">
-                                <option value="">Todos los reactivos</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="filter-type">Tipo de Movimiento</label>
-                            <select id="filter-type" class="form-control">
-                                <option value="">Todos</option>
-                                <option value="ingreso">Ingreso (Inventario)</option>
-                                <option value="consumo">Consumo (Análisis)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="filter-lote">Filtrar por Lote</label>
-                            <input type="text" id="filter-lote" class="form-control" placeholder="Buscar lote...">
-                        </div>
-                        <div class="form-group flex-end">
-                            <button id="btn-clear-filters" class="btn btn-secondary flex-1">
-                                <i data-lucide="filter-x"></i>
-                                <span>Limpiar</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card table-card">
-                    <div class="card-header flex-row justify-between align-center">
-                        <div>
-                            <h3>Libro de Kardex de Reactivos</h3>
-                            <p class="text-muted">Registro oficial de movimientos y consumo neto de sustancias controladas</p>
-                        </div>
-                        <div class="action-buttons">
-                            <button class="btn btn-secondary" onclick="window.print()">
-                                <i data-lucide="printer"></i>
-                                <span>Imprimir Kardex</span>
-                            </button>
-                            <button id="btn-export-csv" class="btn btn-primary">
-                                <i data-lucide="file-spreadsheet"></i>
-                                <span>Exportar a Excel (CSV)</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body overflow-x">
-                        <table class="data-table card-table-data">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Vence</th>
-                                    <th>Reactivo</th>
-                                    <th>Lote</th>
-                                    <th>Ingreso</th>
-                                    <th>N Analis</th>
-                                    <th>Cons X Analis</th>
-                                    <th>Egreso (ml)</th>
-                                    <th>Stock (ml)</th>
-                                    <th>Recuperado</th>
-                                    <th>Cons Neto</th>
-                                    <th>Observaciones</th>
-                                    <th class="no-print">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="kardex-tbody">
-                                <!-- Populated by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Backup & Restore -->
-                <div class="card margin-top-lg border-dashed">
-                    <div class="card-body flex-row justify-between align-center flex-wrap gap-md">
-                        <div>
-                            <h4>Respaldo de Seguridad General</h4>
-                            <p class="text-muted">Exporta o importa la base de datos completa (Reactivos + Insumos) en formato JSON</p>
-                        </div>
-                        <div class="flex-row gap-sm">
-                            <button id="btn-backup-json" class="btn btn-secondary">
-                                <i data-lucide="download"></i>
-                                <span>Exportar Respaldo</span>
-                            </button>
-                            <label for="import-file" class="btn btn-secondary cursor-pointer">
-                                <i data-lucide="upload"></i>
-                                <span>Importar Respaldo</span>
-                                <input type="file" id="import-file" accept=".json" class="hidden">
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Transaction View (Ingreso/Consumo Reactivos Form) -->
-            <section id="transaction-view" class="view-section">
-                <div class="transaction-container">
-                    <!-- Switch Tabs -->
-                    <div class="tabs-control">
-                        <button class="tab-btn active" onclick="switchTab('tab-ingreso')">
-                            <i data-lucide="plus-circle"></i>
-                            <span>Ingreso de Inventario</span>
-                        </button>
-                        <button class="tab-btn" onclick="switchTab('tab-consumo')">
-                            <i data-lucide="minus-circle"></i>
-                            <span>Consumo de Análisis</span>
-                        </button>
-                    </div>
-
-                    <!-- Tab Ingreso -->
-                    <div id="tab-ingreso" class="tab-content active">
-                        <div class="card form-card">
-                            <div class="card-header border-none">
-                                <h3>Registrar Entrada de Reactivo</h3>
-                                <p class="text-muted">Añadir nuevo lote o reabastecer stock</p>
-                            </div>
-                            <form id="form-ingreso" class="card-body grid-form">
-                                <div class="form-group col-span-2">
-                                    <label for="ingreso-reactivo">Reactivo *</label>
-                                    <div class="flex-row gap-sm">
-                                        <select id="ingreso-reactivo" class="form-control" required>
-                                            <option value="">Seleccione un reactivo...</option>
-                                        </select>
-                                        <button type="button" class="btn btn-secondary icon-btn" onclick="openNewReagentModal()" title="Crear Reactivo Nuevo">
-                                            <i data-lucide="plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="ingreso-lote">Número de Lote *</label>
-                                    <input type="text" id="ingreso-lote" class="form-control" placeholder="Ej. K57210575" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="ingreso-cantidad">Cantidad Ingresada (ml / g) *</label>
-                                    <input type="number" id="ingreso-cantidad" class="form-control" min="1" step="any" placeholder="Ej. 4000" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="ingreso-fecha">Fecha de Ingreso *</label>
-                                    <input type="date" id="ingreso-fecha" class="form-control" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="ingreso-caducidad">Fecha de Vencimiento *</label>
-                                    <input type="date" id="ingreso-caducidad" class="form-control" required>
-                                </div>
-                                <div class="form-group col-span-2">
-                                    <label for="ingreso-obs">Observaciones</label>
-                                    <textarea id="ingreso-obs" class="form-control" rows="3" placeholder="Proveedor, estado físico del envase, etc..."></textarea>
-                                </div>
-                                <div class="form-actions col-span-2">
-                                    <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i data-lucide="save"></i>
-                                        <span>Guardar Ingreso</span>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Tab Consumo -->
-                    <div id="tab-consumo" class="tab-content">
-                        <div class="card form-card">
-                            <div class="card-header border-none">
-                                <h3>Registrar Consumo por Análisis</h3>
-                                <p class="text-muted">Descontar del inventario y detallar el consumo neto</p>
-                            </div>
-                            <form id="form-consumo" class="card-body grid-form">
-                                <div class="form-group">
-                                    <label for="consumo-reactivo">Reactivo *</label>
-                                    <select id="consumo-reactivo" class="form-control" required>
-                                        <option value="">Seleccione un reactivo...</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="consumo-lote">Lote Disponible *</label>
-                                    <select id="consumo-lote" class="form-control" required disabled>
-                                        <option value="">Seleccione primero un reactivo...</option>
-                                    </select>
-                                    <span id="lote-stock-indicator" class="form-info-text"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label for="consumo-fecha">Fecha de Análisis *</label>
-                                    <input type="date" id="consumo-fecha" class="form-control" required>
-                                </div>
-                                <div class="form-group-divider col-span-2">Cálculos de Consumo</div>
-                                <div class="form-group">
-                                    <label for="consumo-n-analis">Número de Análisis (N Analis) *</label>
-                                    <input type="number" id="consumo-n-analis" class="form-control" min="1" placeholder="Ej. 6" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="consumo-x-analis">Consumo por Análisis (ml/g) *</label>
-                                    <input type="number" id="consumo-x-analis" class="form-control" min="0" step="any" placeholder="Ej. 100" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="consumo-egreso">Egreso Bruto Total (ml/g)</label>
-                                    <div class="disabled-input-wrapper">
-                                        <input type="number" id="consumo-egreso" class="form-control bg-disabled" placeholder="Auto-calculado" readonly>
-                                        <span class="input-badge">Auto</span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="consumo-recuperado">Cantidad Recuperada (ml/g)</label>
-                                    <input type="number" id="consumo-recuperado" class="form-control" min="0" step="any" placeholder="Ej. 300 (opcional)">
-                                </div>
-                                <div class="form-group">
-                                    <label for="consumo-neto">Consumo Neto Real (ml/g)</label>
-                                    <div class="disabled-input-wrapper">
-                                        <input type="number" id="consumo-neto" class="form-control bg-disabled font-semibold" placeholder="Auto-calculado" readonly>
-                                        <span class="input-badge">Auto</span>
-                                    </div>
-                                </div>
-                                <div class="form-group col-span-2">
-                                    <label for="consumo-obs">Observaciones / Tipo de Análisis</label>
-                                    <textarea id="consumo-obs" class="form-control" rows="2" placeholder="Ej. Análisis de crudo - Norma ASTM, analista a cargo..."></textarea>
-                                </div>
-                                <div class="form-actions col-span-2">
-                                    <button type="reset" class="btn btn-secondary" onclick="resetConsumoForm()">Limpiar Formulario</button>
-                                    <button type="submit" class="btn btn-primary" id="btn-save-consumo">
-                                        <i data-lucide="save"></i>
-                                        <span>Registrar Consumo</span>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Inventory / Batches View (Reactivos) -->
-            <section id="inventory-view" class="view-section">
-                <div class="flex-row justify-between align-center margin-bottom-md flex-wrap gap-sm">
-                    <div>
-                        <h3>Inventario Físico Detallado (Reactivos)</h3>
-                        <p class="text-muted">Vista agrupada por reactivos y sus lotes vigentes de forma individual</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="openNewReagentModal()">
-                        <i data-lucide="plus"></i>
-                        <span>Añadir Reactivo</span>
-                    </button>
-                </div>
-
-                <div class="inventory-grid" id="inventory-grid-cards">
-                    <!-- Dinámicamente poblado con tarjetas de reactivos -->
                 </div>
             </section>
 
@@ -538,6 +274,27 @@
                                 <!-- Populated by JS -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Backup & Restore -->
+                <div class="card margin-top-lg border-dashed">
+                    <div class="card-body flex-row justify-between align-center flex-wrap gap-md">
+                        <div>
+                            <h4>Respaldo de Seguridad General</h4>
+                            <p class="text-muted">Exporta o importa la base de datos completa (Reactivos + Insumos) en formato JSON</p>
+                        </div>
+                        <div class="flex-row gap-sm">
+                            <button id="btn-backup-json" class="btn btn-secondary">
+                                <i data-lucide="download"></i>
+                                <span>Exportar Respaldo</span>
+                            </button>
+                            <label for="import-file" class="btn btn-secondary cursor-pointer">
+                                <i data-lucide="upload"></i>
+                                <span>Importar Respaldo</span>
+                                <input type="file" id="import-file" accept=".json" class="hidden">
+                            </label>
+                        </div>
                     </div>
                 </div>
             </section>

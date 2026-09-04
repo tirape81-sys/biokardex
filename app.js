@@ -23,10 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Set default dates in forms
     const todayISO = today.toISOString().split('T')[0];
-    document.getElementById('ingreso-fecha').value = todayISO;
-    document.getElementById('consumo-fecha').value = todayISO;
-    document.getElementById('mat-ingreso-fecha').value = todayISO;
-    document.getElementById('mat-consumo-fecha').value = todayISO;
+    const ingresoFecha = document.getElementById('ingreso-fecha');
+    if (ingresoFecha) ingresoFecha.value = todayISO;
+    const consumoFecha = document.getElementById('consumo-fecha');
+    if (consumoFecha) consumoFecha.value = todayISO;
+    const matIngresoFecha = document.getElementById('mat-ingreso-fecha');
+    if (matIngresoFecha) matIngresoFecha.value = todayISO;
+    const matConsumoFecha = document.getElementById('mat-consumo-fecha');
+    if (matConsumoFecha) matConsumoFecha.value = todayISO;
 
     // Load theme preference
     const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -445,7 +449,7 @@ function setupEventListeners() {
         setTheme(targetTheme);
     });
 
-    // Reagent form inputs changes to auto-calculate values
+    // Reagent form inputs changes to auto-calculate values (if present)
     const nAnalisInput = document.getElementById('consumo-n-analis');
     const xAnalisInput = document.getElementById('consumo-x-analis');
     const egresoInput = document.getElementById('consumo-egreso');
@@ -453,6 +457,7 @@ function setupEventListeners() {
     const netoInput = document.getElementById('consumo-neto');
 
     function calculateConsumos() {
+        if (!nAnalisInput || !xAnalisInput || !egresoInput || !recuperadoInput || !netoInput) return;
         const nAnalis = Number(nAnalisInput.value) || 0;
         const xAnalis = Number(xAnalisInput.value) || 0;
         const egreso = nAnalis * xAnalis;
@@ -463,64 +468,91 @@ function setupEventListeners() {
         netoInput.value = egreso > 0 ? neto : '';
     }
 
-    nAnalisInput.addEventListener('input', calculateConsumos);
-    xAnalisInput.addEventListener('input', calculateConsumos);
-    recuperadoInput.addEventListener('input', calculateConsumos);
+    if (nAnalisInput) nAnalisInput.addEventListener('input', calculateConsumos);
+    if (xAnalisInput) xAnalisInput.addEventListener('input', calculateConsumos);
+    if (recuperadoInput) recuperadoInput.addEventListener('input', calculateConsumos);
 
     // Reagent selection loads lotes
     const consumoReagentSelect = document.getElementById('consumo-reactivo');
-    consumoReagentSelect.addEventListener('change', () => {
-        updateConsumoLoteDropdown(consumoReagentSelect.value);
-    });
+    if (consumoReagentSelect) {
+        consumoReagentSelect.addEventListener('change', () => {
+            updateConsumoLoteDropdown(consumoReagentSelect.value);
+        });
+    }
 
     // Lote selection updates stock indicator
     const consumoLoteSelect = document.getElementById('consumo-lote');
-    consumoLoteSelect.addEventListener('change', () => {
-        updateLoteStockIndicator();
-    });
+    if (consumoLoteSelect) {
+        consumoLoteSelect.addEventListener('change', () => {
+            updateLoteStockIndicator();
+        });
+    }
 
     // Materials form dynamic unit autofill
     const matIngresoSelect = document.getElementById('mat-ingreso-id');
-    matIngresoSelect.addEventListener('change', () => {
-        const mat = materials.find(m => m.id === matIngresoSelect.value);
-        document.getElementById('mat-ingreso-unidad').value = mat ? mat.unit : '';
-    });
+    if (matIngresoSelect) {
+        matIngresoSelect.addEventListener('change', () => {
+            const mat = materials.find(m => m.id === matIngresoSelect.value);
+            const unitEl = document.getElementById('mat-ingreso-unidad');
+            if (unitEl) unitEl.value = mat ? mat.unit : '';
+        });
+    }
 
     const matConsumoSelect = document.getElementById('mat-consumo-id');
-    matConsumoSelect.addEventListener('change', () => {
-        const mat = materials.find(m => m.id === matConsumoSelect.value);
-        document.getElementById('mat-consumo-unidad').value = mat ? mat.unit : '';
-        updateMatStockIndicator();
-    });
+    if (matConsumoSelect) {
+        matConsumoSelect.addEventListener('change', () => {
+            const mat = materials.find(m => m.id === matConsumoSelect.value);
+            const unitEl = document.getElementById('mat-consumo-unidad');
+            if (unitEl) unitEl.value = mat ? mat.unit : '';
+            updateMatStockIndicator();
+        });
+    }
 
     // Submit forms
-    document.getElementById('form-ingreso').addEventListener('submit', handleIngresoSubmit);
-    document.getElementById('form-consumo').addEventListener('submit', handleConsumoSubmit);
-    document.getElementById('form-new-reagent').addEventListener('submit', handleNewReagentSubmit);
+    const formIngreso = document.getElementById('form-ingreso');
+    if (formIngreso) formIngreso.addEventListener('submit', handleIngresoSubmit);
+    const formConsumo = document.getElementById('form-consumo');
+    if (formConsumo) formConsumo.addEventListener('submit', handleConsumoSubmit);
+    const formNewReagent = document.getElementById('form-new-reagent');
+    if (formNewReagent) formNewReagent.addEventListener('submit', handleNewReagentSubmit);
 
     // Submit forms (Materiales)
-    document.getElementById('form-mat-ingreso').addEventListener('submit', handleMatIngresoSubmit);
-    document.getElementById('form-mat-consumo').addEventListener('submit', handleMatConsumoSubmit);
-    document.getElementById('form-new-material').addEventListener('submit', handleNewMaterialSubmit);
+    const formMatIngreso = document.getElementById('form-mat-ingreso');
+    if (formMatIngreso) formMatIngreso.addEventListener('submit', handleMatIngresoSubmit);
+    const formMatConsumo = document.getElementById('form-mat-consumo');
+    if (formMatConsumo) formMatConsumo.addEventListener('submit', handleMatConsumoSubmit);
+    const formNewMaterial = document.getElementById('form-new-material');
+    if (formNewMaterial) formNewMaterial.addEventListener('submit', handleNewMaterialSubmit);
 
     // Filters event listeners (Reactivos)
-    document.getElementById('filter-reagent').addEventListener('change', renderKardexTable);
-    document.getElementById('filter-type').addEventListener('change', renderKardexTable);
-    document.getElementById('filter-lote').addEventListener('input', renderKardexTable);
-    document.getElementById('btn-clear-filters').addEventListener('click', clearFilters);
+    const filterReagent = document.getElementById('filter-reagent');
+    if (filterReagent) filterReagent.addEventListener('change', renderKardexTable);
+    const filterType = document.getElementById('filter-type');
+    if (filterType) filterType.addEventListener('change', renderKardexTable);
+    const filterLote = document.getElementById('filter-lote');
+    if (filterLote) filterLote.addEventListener('input', renderKardexTable);
+    const btnClearFilters = document.getElementById('btn-clear-filters');
+    if (btnClearFilters) btnClearFilters.addEventListener('click', clearFilters);
 
     // Filters event listeners (Materiales)
-    document.getElementById('filter-mat').addEventListener('change', renderMatKardexTable);
-    document.getElementById('filter-mat-type').addEventListener('change', renderMatKardexTable);
-    document.getElementById('btn-clear-mat-filters').addEventListener('click', clearMatFilters);
+    const filterMat = document.getElementById('filter-mat');
+    if (filterMat) filterMat.addEventListener('change', renderMatKardexTable);
+    const filterMatType = document.getElementById('filter-mat-type');
+    if (filterMatType) filterMatType.addEventListener('change', renderMatKardexTable);
+    const btnClearMatFilters = document.getElementById('btn-clear-mat-filters');
+    if (btnClearMatFilters) btnClearMatFilters.addEventListener('click', clearMatFilters);
 
     // CSV Exports
-    document.getElementById('btn-export-csv').addEventListener('click', exportToCSV);
-    document.getElementById('btn-export-mat-csv').addEventListener('click', exportMatToCSV);
+    const btnExportCsv = document.getElementById('btn-export-csv');
+    if (btnExportCsv) btnExportCsv.addEventListener('click', exportToCSV);
+    const btnExportMatCsv = document.getElementById('btn-export-mat-csv');
+    if (btnExportMatCsv) btnExportMatCsv.addEventListener('click', exportMatToCSV);
 
     // Backup & Restore
-    document.getElementById('btn-backup-json').addEventListener('click', backupDatabase);
-    document.getElementById('import-file').addEventListener('change', restoreDatabase);
+    const btnBackupJson = document.getElementById('btn-backup-json');
+    if (btnBackupJson) btnBackupJson.addEventListener('click', backupDatabase);
+    const importFile = document.getElementById('import-file');
+    if (importFile) importFile.addEventListener('change', restoreDatabase);
 
     // Google Sheets Sync Settings
     document.getElementById('form-sync-settings').addEventListener('submit', async (e) => {
@@ -671,19 +703,7 @@ function switchView(viewId) {
     let title = 'Dashboard';
     let subtitle = 'Resumen general del inventario de reactivos';
     
-    if (viewId === 'kardex') {
-        title = 'Kardex Completo';
-        subtitle = 'Historial completo de entradas y salidas de reactivos';
-        renderKardexTable();
-    } else if (viewId === 'transaction') {
-        title = 'Nueva Transacción';
-        subtitle = 'Registra ingresos o egresos de análisis en el inventario';
-        populateFormDropdowns();
-    } else if (viewId === 'inventory') {
-        title = 'Control de Stock';
-        subtitle = 'Detalle de lotes físicos y alertas de vencimiento';
-        renderInventoryCards();
-    } else if (viewId === 'dashboard') {
+    if (viewId === 'dashboard') {
         renderDashboardStats();
         renderConsumptionChart();
         renderRecentTransactions();
@@ -748,9 +768,9 @@ function populateFormDropdowns() {
 
     const htmlOpts = reagents.map(r => `<option value="${r.id}">${r.name} ${r.cas ? `(${r.cas})` : ''}</option>`).join('');
     
-    ingresoSelect.innerHTML = '<option value="">Seleccione un reactivo...</option>' + htmlOpts;
-    consumoSelect.innerHTML = '<option value="">Seleccione un reactivo...</option>' + htmlOpts;
-    filterSelect.innerHTML = '<option value="">Todos los reactivos</option>' + htmlOpts;
+    if (ingresoSelect) ingresoSelect.innerHTML = '<option value="">Seleccione un reactivo...</option>' + htmlOpts;
+    if (consumoSelect) consumoSelect.innerHTML = '<option value="">Seleccione un reactivo...</option>' + htmlOpts;
+    if (filterSelect) filterSelect.innerHTML = '<option value="">Todos los reactivos</option>' + htmlOpts;
 }
 
 // Populates dropdown selectors with active materials
@@ -1236,6 +1256,7 @@ function renderRecentTransactions() {
 // Render Reagents Kardex Table
 function renderKardexTable() {
     const tbody = document.getElementById('kardex-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     const filterReagentId = document.getElementById('filter-reagent').value;
@@ -1343,6 +1364,7 @@ function renderMatKardexTable() {
 // Render Physical Inventory Stock cards
 function renderInventoryCards() {
     const container = document.getElementById('inventory-grid-cards');
+    if (!container) return;
     container.innerHTML = '';
 
     const inventory = getInventoryState();
